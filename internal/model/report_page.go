@@ -7,17 +7,17 @@ import (
 
 
 type reportPageModel struct {
-	Page Page
+	page Page
 }
 
 func ReportPage(c int) reportPageModel {
 	m := reportPageModel{
-		Page: Page{
-			ChoicePos: 0, 
-			Chosen: false, 
-			Quitting: false, 
-			PageCode: PAGE_CODE["REPORT_PAGE"], 
-			Choices: []string{"Gerar relatorio - dia seguinte", "Voltar"},
+		page: Page{
+			choicePos: 0, 
+			chosen: false, 
+			quitting: false, 
+			pageCode: PAGE_CODE["REPORT_PAGE"], 
+			choices: []string{"Gerar relatorio - dia seguinte", "Voltar"},
 			LastPageCode: c,
 			},
 	}
@@ -33,11 +33,11 @@ func (m reportPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
 		if k == "q" || k == "ctrl+c" {
-			m.Page.Quitting = true
+			m.page.quitting = true
 			return m, tea.Quit
 		}
 		if k == "esc" {
-			return backTracking(m.Page.LastPageCode)
+			return backTracking(m.page.LastPageCode)
 		}
 	}
 
@@ -47,7 +47,7 @@ func (m reportPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m reportPageModel) View() string {
 	var s string
-	if m.Page.Quitting {
+	if m.page.quitting {
 		return "\n  See you later!\n\n"
 	}
 	s = renderView(&m)
@@ -61,32 +61,32 @@ func (m reportPageModel) updateChoices(msg tea.Msg) (tea.Model, tea.Cmd) {
 	i := navigate(&m, msg)
 	switch i {
 		case 1: // exit
-			return backTracking(m.Page.LastPageCode)
+			return backTracking(m.page.LastPageCode)
 	}
 
 	return m, nil
 }
 
 func (m reportPageModel) GetChoices() []string {
-	return m.Page.Choices
+	return m.page.choices
 }
 
 func (m *reportPageModel) SetChosen(chosen bool) {
-	m.Page.Chosen = chosen
+	m.page.chosen = chosen
 }
 
 func (m *reportPageModel) GetPos() int {
-	return m.Page.ChoicePos
+	return m.page.choicePos
 }
 
 func (m *reportPageModel) IncrementPos() {
-	m.Page.ChoicePos++
+	m.page.choicePos++
 }
 
 func (m *reportPageModel) DecreasePos() {
-	m.Page.ChoicePos--
+	m.page.choicePos--
 }
 
 func (m *reportPageModel) SetPos(pos int) {
-	m.Page.ChoicePos = pos
+	m.page.choicePos = pos
 }

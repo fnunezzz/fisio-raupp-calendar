@@ -20,11 +20,11 @@ var (
 )
 
 type Page struct {
-	ChoicePos		int
-	Chosen   		bool
-	Quitting 		bool
-	PageCode 		int
-	Choices 		[]string
+	choicePos		int
+	chosen   		bool
+	quitting 		bool
+	pageCode 		int
+	choices 		[]string
 	LastPageCode 	int
 }
 
