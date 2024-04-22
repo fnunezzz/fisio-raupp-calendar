@@ -3,26 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
-
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/fnunezzz/fisio-raupp-calendar/internal/model"
 )
 
-
-
 func main() {
-        go startClient()
-        p := tea.NewProgram(model.InitialPage())
-        if _, err := p.Run(); err != nil {
-                fmt.Fprintf(os.Stderr, "Error: %v", err)
-                os.Exit(1)
-        }
-
-}
-
-func startClient() {
-        http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 
 		// Prepare HTML response with CSS styling
