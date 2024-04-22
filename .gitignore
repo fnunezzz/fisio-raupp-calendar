@@ -1,0 +1,4 @@
+*.exe
+.env
+cr*.json
+to*.json
