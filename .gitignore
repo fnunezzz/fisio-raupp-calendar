@@ -2,3 +2,6 @@
 .env
 cr*.json
 to*.json
+.*
+todo.md
+bin

@@ -12,8 +12,8 @@ import (
 
 
 func main() {
-        go startClient()
-        p := tea.NewProgram(model.InitialPage())
+        // go startClient()
+        p := tea.NewProgram(model.SetupPage())
         if _, err := p.Run(); err != nil {
                 fmt.Fprintf(os.Stderr, "Error: %v", err)
                 os.Exit(1)

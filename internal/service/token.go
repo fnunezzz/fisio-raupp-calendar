@@ -3,20 +3,18 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"syscall"
 
 	"golang.org/x/oauth2"
 )
 
 type TokenService interface {
-	writeToFile() error
 	readToken() (*oauth2.Token, error)
 	writeToken(*oauth2.Token) error
 	GenerateToken(*oauth2.Config) (*oauth2.Token, error)
+	CheckToken() error
 	getTokenFromWeb(*oauth2.Config) *oauth2.Token
 }
 
@@ -27,9 +25,17 @@ type tokenService struct {
 
 func NewTokenService() TokenService {
 	return &tokenService{
-		folderName: ".data",
+		folderName: FolderName,
 		fileName: "token.json",
 	}
+}
+
+func (t *tokenService) CheckToken() error {
+	_, err := os.Stat(t.folderName + "/" + t.fileName)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (t *tokenService) GenerateToken(config *oauth2.Config) (*oauth2.Token, error) {
@@ -89,37 +95,3 @@ func (t *tokenService) readToken() (*oauth2.Token, error) {
 	return tok, err
 }
 
-// This functions writes to file in a hidden folder
-// It's a basic security measure to avoid exposing the token to the user
-// It's VERY basic, but it's better than nothing
-// Todo encrypt the token (?)
-func (t *tokenService) writeToFile() error {
-
-    // Create the hidden folder
-    err := os.Mkdir(t.folderName, 0755) // 0755 sets the folder permissions
-    if err != nil {
-		if !errors.Is(err, os.ErrExist) {
-			return err
-		}
-    }
-
-	// Convert folderName to UTF-16 encoded pointer
-	folderNamePtr, err := syscall.UTF16PtrFromString(t.folderName)
-	if err != nil {
-		return err
-	}
-
-	// Get the file attributes
-	attrs, err := syscall.GetFileAttributes(folderNamePtr)
-	if err != nil {
-		return err
-	}
-
-	// Set the hidden attribute
-	err = syscall.SetFileAttributes(folderNamePtr, attrs|syscall.FILE_ATTRIBUTE_HIDDEN)
-	if err != nil {
-		return err
-	}
-	
-	return nil
-}

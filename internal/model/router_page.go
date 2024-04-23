@@ -7,12 +7,12 @@ import (
 
 
 
-type initialPageModel struct {
+type routerPageModel struct {
 	page Page
 }
 
-func InitialPage() initialPageModel {
-	m := initialPageModel{
+func RouterPage() routerPageModel {
+	m := routerPageModel{
 		page: Page{
 			choicePos: 0, 
 			chosen: false, 
@@ -26,12 +26,12 @@ func InitialPage() initialPageModel {
 
 
 
-func (m initialPageModel) Init() tea.Cmd {
+func (m routerPageModel) Init() tea.Cmd {
 	return nil
 }
 
 
-func (m initialPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m routerPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
@@ -45,12 +45,12 @@ func (m initialPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.updateChoices(msg)
 }
 
-func (m initialPageModel) GetChoices() []string {
+func (m routerPageModel) GetChoices() []string {
 	return m.page.choices
 }
 
 
-func (m initialPageModel) View() string {
+func (m routerPageModel) View() string {
 	var s string
 	if m.page.quitting {
 		return "\n  See you later!\n\n"
@@ -61,7 +61,7 @@ func (m initialPageModel) View() string {
 }
 
 
-func (m initialPageModel) updateChoices(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m routerPageModel) updateChoices(msg tea.Msg) (tea.Model, tea.Cmd) {
 	i := navigate(&m, msg)
 	switch i {
 		case 0:
@@ -71,22 +71,22 @@ func (m initialPageModel) updateChoices(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m *initialPageModel) SetChosen(chosen bool) {
+func (m *routerPageModel) SetChosen(chosen bool) {
 	m.page.chosen = chosen
 }
 
-func (m *initialPageModel) GetPos() int {
+func (m *routerPageModel) GetPos() int {
 	return m.page.choicePos
 }
 
-func (m *initialPageModel) IncrementPos() {
+func (m *routerPageModel) IncrementPos() {
 	m.page.choicePos += 1
 }
 
-func (m *initialPageModel) DecreasePos() {
+func (m *routerPageModel) DecreasePos() {
 	m.page.choicePos -= 1
 }
 
-func (m *initialPageModel) SetPos(pos int) {
+func (m *routerPageModel) SetPos(pos int) {
 	m.page.choicePos = pos
 }
