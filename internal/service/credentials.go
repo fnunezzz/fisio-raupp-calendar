@@ -27,7 +27,7 @@ func (c *configService) GetCredentials() []byte {
 }
 
 func (c *configService) LoadCredentials() ([]byte, error) {
-	credentials, err := os.ReadFile("credentials.json")
+	credentials, err := os.ReadFile(FolderName + "/credentials.json")
 	if err != nil {
 		return nil, ErrCredentialsNotFound
 	}

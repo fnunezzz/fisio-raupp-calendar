@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"golang.org/x/oauth2"
 )
@@ -13,14 +15,16 @@ import (
 type TokenService interface {
 	readToken() (*oauth2.Token, error)
 	writeToken(*oauth2.Token) error
-	GenerateToken(*oauth2.Config) (*oauth2.Token, error)
+	GenerateToken() (*oauth2.Token, error)
 	CheckToken() error
-	getTokenFromWeb(*oauth2.Config) *oauth2.Token
+	getTokenFromWeb(*oauth2.Config)
+	WriteTokenUsingAuthCode(authCode string)
 }
 
 type tokenService struct {
 	folderName string
 	fileName  string
+	config *oauth2.Config
 }
 
 func NewTokenService() TokenService {
@@ -38,17 +42,28 @@ func (t *tokenService) CheckToken() error {
 	return nil
 }
 
-func (t *tokenService) GenerateToken(config *oauth2.Config) (*oauth2.Token, error) {
+func (t *tokenService) GenerateToken() (*oauth2.Token, error) {
+	googleAuth := NewGoogleAuthenticationService()
+	credentialsService := NewCredentialsService()
+	
+	credentials, err := credentialsService.LoadCredentials()
+	if err != nil {
+		return nil, err
+	}
+	oauth, err := googleAuth.Auth(credentials)
+
+	if err != nil {
+		return nil, err
+	}
 	tok, err := t.readToken()
 	// no token on file, so time to make a new one
-	// TODO display message to user
 	if err != nil {
-			tok = t.getTokenFromWeb(config)
-			err := t.writeToken(tok)
-			if (err != nil) {
+			t.getTokenFromWeb(oauth)
+			tok, err = t.readToken()
+			if err != nil {
 				return nil, err
 			}
-			return tok, nil
+
 	}
 	return tok, nil
 
@@ -65,21 +80,48 @@ func (t *tokenService) writeToken(token *oauth2.Token) error {
 	return nil
 }
 
-func (t *tokenService) getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
+func (t *tokenService) getTokenFromWeb(config *oauth2.Config) {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Go to the following link in your browser then type the "+
-			"authorization code: \n%v\n", authURL)
+	fmt.Printf("Abra o seguinte LINK: \n%v\n", authURL)
+	
+	i := 0
+	for {
+		if i == 120 {
+			log.Fatalf("Unable to read authorization code: %v", errors.New("timeout"))
+		}
+		err := t.CheckToken()
+		if err == nil {
+			break
+		}
+		time.Sleep(1 * time.Second)
+		i++
 
-	var authCode string
-	if _, err := fmt.Scan(&authCode); err != nil {
-			log.Fatalf("Unable to read authorization code: %v", err)
 	}
 
-	tok, err := config.Exchange(context.TODO(), authCode)
+
+}
+
+func (t *tokenService) WriteTokenUsingAuthCode(authCode string) {
+	googleAuth := NewGoogleAuthenticationService()
+	credentialsService := NewCredentialsService()
+	
+	credentials, err := credentialsService.LoadCredentials()
+	if err != nil {
+		log.Fatalf("Unable to load credentials: %v", err)
+	}
+	oauth, err := googleAuth.Auth(credentials)
+	if err != nil {
+		log.Fatalf("Unable to authenticate: %v", err)
+	}
+	tok, err := oauth.Exchange(context.TODO(), authCode)
 	if err != nil {
 			log.Fatalf("Unable to retrieve token from web: %v", err)
 	}
-	return tok
+	time.Sleep(3 * time.Second) // enough time to http handle do it's job of redirection
+	err = t.writeToken(tok)
+	if err != nil {
+			log.Fatalf("Unable to write token: %v", err)
+	}
 }
 
 func (t *tokenService) readToken() (*oauth2.Token, error) {
@@ -94,4 +136,3 @@ func (t *tokenService) readToken() (*oauth2.Token, error) {
 	err = json.NewDecoder(f).Decode(tok)
 	return tok, err
 }
-

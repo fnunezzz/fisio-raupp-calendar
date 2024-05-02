@@ -1,6 +1,8 @@
 package model
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -84,11 +86,23 @@ func (m *setupPageModel) checkToken() tea.Msg {
 	tokenService := service.NewTokenService()
 	err := tokenService.CheckToken()
 	if err != nil {
-		return errMsg{err}
+
+		webClient := service.NewClientService()
+		go webClient.StartClient()
+		defer webClient.StopClient()
+		
+		tokenService := service.NewTokenService()
+		_, err := tokenService.GenerateToken()
+		if err != nil {
+			f := fmt.Sprintf("Unable to generate token: %v", err)
+			err = errors.New(f)
+			return errMsg{err}
+		}
 	}
 	m.step = m.step + 1
 	return step(m.step)
 }
+
 func (m *setupPageModel) createFolder() tea.Msg {
 	time.Sleep(1 * time.Second)
 	folderSerivce := service.NewFolderService()
@@ -98,13 +112,8 @@ func (m *setupPageModel) createFolder() tea.Msg {
 	}
 	m.step = m.step + 1
 	return step(m.step)
-	// credentialsService := service.NewCredentialsService()
-
-	// _, err := credentialsService.LoadCredentials()
-	// if err != nil {
-	// 	return errMsg{err}
-	// }
 }
+
 func (m *setupPageModel) checkCredentials() tea.Msg {
 	time.Sleep(1 * time.Second)
 	credentialsService := service.NewCredentialsService()
@@ -112,7 +121,7 @@ func (m *setupPageModel) checkCredentials() tea.Msg {
 	_, err := credentialsService.LoadCredentials()
 	if err != nil {
 			return errMsg{err}
-		}
+	}
 	m.step = m.step + 1
 	return step(m.step)
 }
