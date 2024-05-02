@@ -9,6 +9,7 @@ var PAGE_CODE = map[string]int{
     "REPORT_PAGE":  1,
     "ERROR_PAGE":  -1,
 	"OAUTH_PAGE":  2,
+	"REDIRECT_PAGE":  2,
 }
 
 // Update loop for the views where you're choosing a task.
@@ -40,7 +41,7 @@ func navigate(m Model, msg tea.Msg) int {
 func backTracking(code int) (tea.Model, tea.Cmd) {
 	switch code {
 	case PAGE_CODE["INITIAL_PAGE"]:
-		return RouterPage().Update(nil)
+		return MainPage().Update(nil)
 	case PAGE_CODE["REPORT_PAGE"]:
 		return ReportPage(code).Update(nil)
 	}

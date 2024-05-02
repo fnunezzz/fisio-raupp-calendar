@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -15,9 +13,9 @@ import (
 type TokenService interface {
 	readToken() (*oauth2.Token, error)
 	writeToken(*oauth2.Token) error
-	GenerateToken() (*oauth2.Token, error)
+	GenerateToken() (*oauth2.Token, string, error)
 	CheckToken() error
-	getTokenFromWeb(*oauth2.Config)
+	getTokenFromWeb(*oauth2.Config) string
 	WriteTokenUsingAuthCode(authCode string)
 }
 
@@ -42,30 +40,27 @@ func (t *tokenService) CheckToken() error {
 	return nil
 }
 
-func (t *tokenService) GenerateToken() (*oauth2.Token, error) {
+func (t *tokenService) GenerateToken() (*oauth2.Token, string, error) {
 	googleAuth := NewGoogleAuthenticationService()
 	credentialsService := NewCredentialsService()
 	
 	credentials, err := credentialsService.LoadCredentials()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	oauth, err := googleAuth.Auth(credentials)
 
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	tok, err := t.readToken()
 	// no token on file, so time to make a new one
 	if err != nil {
-			t.getTokenFromWeb(oauth)
-			tok, err = t.readToken()
-			if err != nil {
-				return nil, err
-			}
+			url := t.getTokenFromWeb(oauth)
+			return nil, url, nil
 
 	}
-	return tok, nil
+	return tok, "", nil
 
 }
 
@@ -80,23 +75,10 @@ func (t *tokenService) writeToken(token *oauth2.Token) error {
 	return nil
 }
 
-func (t *tokenService) getTokenFromWeb(config *oauth2.Config) {
+func (t *tokenService) getTokenFromWeb(config *oauth2.Config) string {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Abra o seguinte LINK: \n%v\n", authURL)
 	
-	i := 0
-	for {
-		if i == 120 {
-			log.Fatalf("Unable to read authorization code: %v", errors.New("timeout"))
-		}
-		err := t.CheckToken()
-		if err == nil {
-			break
-		}
-		time.Sleep(1 * time.Second)
-		i++
-
-	}
+	return authURL
 
 
 }

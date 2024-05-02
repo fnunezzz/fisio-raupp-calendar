@@ -9,7 +9,10 @@ require (
 	google.golang.org/api v0.172.0
 )
 
-require github.com/charmbracelet/harmonica v0.2.0 // indirect
+require (
+	github.com/atotto/clipboard v0.1.4 // indirect
+	github.com/charmbracelet/harmonica v0.2.0 // indirect
+)
 
 require (
 	cloud.google.com/go/compute v1.23.4 // indirect

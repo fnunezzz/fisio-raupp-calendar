@@ -7,12 +7,12 @@ import (
 
 
 
-type routerPageModel struct {
+type mainPageModel struct {
 	page Page
 }
 
-func RouterPage() routerPageModel {
-	m := routerPageModel{
+func MainPage() mainPageModel {
+	m := mainPageModel{
 		page: Page{
 			choicePos: 0, 
 			chosen: false, 
@@ -26,12 +26,12 @@ func RouterPage() routerPageModel {
 
 
 
-func (m routerPageModel) Init() tea.Cmd {
+func (m mainPageModel) Init() tea.Cmd {
 	return nil
 }
 
 
-func (m routerPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m mainPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
@@ -45,12 +45,12 @@ func (m routerPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m.updateChoices(msg)
 }
 
-func (m routerPageModel) GetChoices() []string {
+func (m mainPageModel) GetChoices() []string {
 	return m.page.choices
 }
 
 
-func (m routerPageModel) View() string {
+func (m mainPageModel) View() string {
 	var s string
 	if m.page.quitting {
 		return "\n  See you later!\n\n"
@@ -61,7 +61,7 @@ func (m routerPageModel) View() string {
 }
 
 
-func (m routerPageModel) updateChoices(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m mainPageModel) updateChoices(msg tea.Msg) (tea.Model, tea.Cmd) {
 	i := navigate(&m, msg)
 	switch i {
 		case 0:
@@ -71,22 +71,22 @@ func (m routerPageModel) updateChoices(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m *routerPageModel) SetChosen(chosen bool) {
+func (m *mainPageModel) SetChosen(chosen bool) {
 	m.page.chosen = chosen
 }
 
-func (m *routerPageModel) GetPos() int {
+func (m *mainPageModel) GetPos() int {
 	return m.page.choicePos
 }
 
-func (m *routerPageModel) IncrementPos() {
+func (m *mainPageModel) IncrementPos() {
 	m.page.choicePos += 1
 }
 
-func (m *routerPageModel) DecreasePos() {
+func (m *mainPageModel) DecreasePos() {
 	m.page.choicePos -= 1
 }
 
-func (m *routerPageModel) SetPos(pos int) {
+func (m *mainPageModel) SetPos(pos int) {
 	m.page.choicePos = pos
 }

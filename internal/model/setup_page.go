@@ -32,6 +32,7 @@ func SetupPage() setupPageModel {
 type step int
 
 type errMsg struct{ err error }
+type redirectPage struct{ url string }
 
 func (e errMsg) Error() string { return e.err.Error() }
 
@@ -61,7 +62,7 @@ func (m setupPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		
 		if m.percent > 1.0 {
 			m.percent = 1.0
-			return RouterPage().Update(msg)
+			return MainPage().Update(msg)
 		}
 
 		return m, m.steps[msg]
@@ -69,6 +70,9 @@ func (m setupPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case errMsg:
 		return ErrorPage(msg.Error()).Update(nil)
+
+	case redirectPage:
+		return RedirectPage(msg.url).Update(nil)
 
 	default:
 		return m, nil
@@ -89,10 +93,12 @@ func (m *setupPageModel) checkToken() tea.Msg {
 
 		webClient := service.NewClientService()
 		go webClient.StartClient()
-		defer webClient.StopClient()
 		
 		tokenService := service.NewTokenService()
-		_, err := tokenService.GenerateToken()
+		_, url, err := tokenService.GenerateToken()
+		if url != "" {
+			return redirectPage{url}
+		}
 		if err != nil {
 			f := fmt.Sprintf("Unable to generate token: %v", err)
 			err = errors.New(f)
