@@ -42,7 +42,7 @@ func (m errorPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m errorPageModel) View() string {
 	if m.page.quitting {
-		return "\n  See you later!\n\n"
+		return ciao
 	}
 
 	tpl := "Error\n\n"

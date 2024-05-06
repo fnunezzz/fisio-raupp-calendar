@@ -75,7 +75,7 @@ func (m redirectPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m redirectPageModel) View() string {
 	if m.page.quitting {
-		return "\n  See you later!\n\n"
+		return ciao
 	}
 
 	tpl := fmt.Sprintf(

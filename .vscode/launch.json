@@ -12,8 +12,8 @@
             "mode": "remote",
             "remotePath": "${workspaceFolder}/cmd/fisio-raupp-calendar/main.go",
             "port": 2345,
-            "host": "127.0.0.1",
-            "preLaunchTask": "Run headless dlv" // Here !
+            "host": "127.0.0.1"
+            // "preLaunchTask": "Run headless dlv" // Here !
         }
     ]
 }

@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -18,7 +20,7 @@ func MainPage() mainPageModel {
 			chosen: false, 
 			quitting: false, 
 			pageCode: PAGE_CODE["INITIAL_PAGE"], 
-			choices: []string{"Relatorio", "Ajuda", "Sobre", "Sair"},
+			choices: []string{"Gerar Relatório", "Sair"},
 			},
 	}
 	return m
@@ -51,13 +53,45 @@ func (m mainPageModel) GetChoices() []string {
 
 
 func (m mainPageModel) View() string {
-	var s string
 	if m.page.quitting {
-		return "\n  See you later!\n\n"
+		return ciao
 	}
 
-	s = renderView(&m)
+    c := m.GetPos()
+
+	tpl := "Relatório\n\n"
+	tpl += "%s\n\n"
+	tpl += subtleStyle.Render("j/k, ↑/↓: mover cursor") + dotStyle +
+		subtleStyle.Render("enter: selecionar") + dotStyle +
+		subtleStyle.Render("esc: voltar") + dotStyle +
+		subtleStyle.Render("q: sair")
+
+	choices := ""
+	for i, choice := range m.GetChoices() {
+		choices += fmt.Sprintf("%s\n", checkbox(choice, c == i))
+	}
+
+	s := fmt.Sprintf(tpl, choices)
 	return mainStyle.Render("\n" + s + "\n\n")
+}
+
+func (m mainPageModel) createReport() error {
+	// todo calendar
+	// patients := map[string]string{
+	// 	"Patient 1": "10:00",
+	// 	"Patient 2": "10:00",
+	// 	"Patient 3": "11:20",
+	// 	"Patient 4": "13:40",
+	// 	"Patient 5": "18:00",
+	// }
+	// xlsxService := service.NewXlsxService()
+	// err := xlsxService.GenerateXlsxReport(patients, time.Now())
+	// if err != nil {
+	// 	return err
+	// }
+
+
+	return nil
 }
 
 
@@ -65,7 +99,14 @@ func (m mainPageModel) updateChoices(msg tea.Msg) (tea.Model, tea.Cmd) {
 	i := navigate(&m, msg)
 	switch i {
 		case 0:
-			return ReportPage(m.page.pageCode).Update(msg)
+			err := m.createReport()
+			if err != nil {
+				return ErrorPage(err.Error()), nil
+			}
+			return ReportPage(), nil
+		case 1:
+			m.page.quitting = true
+			return m, tea.Quit
 	}
 
 	return m, nil

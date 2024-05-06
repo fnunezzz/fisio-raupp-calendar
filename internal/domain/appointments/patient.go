@@ -5,8 +5,8 @@ import "errors"
 var ErrInvalidName = errors.New("patient name cannot be empty")
 
 type Patient struct {
-	Name              string
-	RemainingSessions int
+	name              string
+	remainingSessions int
 }
 
 func CreatePatient(name string, remainingSessions int) (*Patient, error) {
@@ -15,8 +15,16 @@ func CreatePatient(name string, remainingSessions int) (*Patient, error) {
 	}
 
 	return &Patient{
-		Name:              name,
-		RemainingSessions: remainingSessions,
+		name:              name,
+		remainingSessions: remainingSessions,
 	}, nil
 
+}
+
+func (p Patient) GetName() string {
+	return p.name
+}
+
+func (p Patient) GetRemainingSessions() int {
+	return p.remainingSessions
 }

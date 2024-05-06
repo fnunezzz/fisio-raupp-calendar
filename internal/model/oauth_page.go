@@ -44,7 +44,7 @@ func (m oauthPageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // TODO - Should execute the entire auth process
 func (m oauthPageModel) View() string {
 	if m.page.quitting {
-		return "\n  See you later!\n\n"
+		return ciao
 	}
 
 	tpl := "Error\n\n"

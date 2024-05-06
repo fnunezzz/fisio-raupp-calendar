@@ -10,6 +10,7 @@ import (
 
 const (
 	dotChar           = " • "
+	ciao = "\n   Ciao\n\n"
 )
 
 // General stuff for styling the view
@@ -39,24 +40,6 @@ type Model interface {
 	DecreasePos()
 	SetChosen(bool)
 	updateChoices(msg tea.Msg) (tea.Model, tea.Cmd)
-}
-
-func renderView(m Model) string {
-    c := m.GetPos()
-
-	tpl := "Relatorio\n\n"
-	tpl += "%s\n\n"
-	tpl += subtleStyle.Render("j/k, ↑/↓: mover cursor") + dotStyle +
-		subtleStyle.Render("enter: selecionar") + dotStyle +
-		subtleStyle.Render("esc: voltar") + dotStyle +
-		subtleStyle.Render("q: sair")
-
-	choices := ""
-	for i, choice := range m.GetChoices() {
-		choices += fmt.Sprintf("%s\n", checkbox(choice, c == i))
-	}
-
-	return fmt.Sprintf(tpl, choices)
 }
 
 // render selected/unselected checkboxes

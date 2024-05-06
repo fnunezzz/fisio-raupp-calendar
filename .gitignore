@@ -5,3 +5,4 @@ to*.json
 .*
 todo.md
 bin
+*.xlsx
