@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/fnunezzz/fisio-raupp-calendar/internal/service"
 )
 
 
@@ -76,20 +77,29 @@ func (m mainPageModel) View() string {
 }
 
 func (m mainPageModel) createReport() error {
-	// todo calendar
-	// patients := map[string]string{
-	// 	"Patient 1": "10:00",
-	// 	"Patient 2": "10:00",
-	// 	"Patient 3": "11:20",
-	// 	"Patient 4": "13:40",
-	// 	"Patient 5": "18:00",
-	// }
-	// xlsxService := service.NewXlsxService()
-	// err := xlsxService.GenerateXlsxReport(patients, time.Now())
-	// if err != nil {
-	// 	return err
-	// }
+	calendarService := service.NewCalendarService()
+	p, t, err := calendarService.GetNextDayAppointments()
 
+	if err != nil {
+		return err
+	}
+
+	reportService := service.NewXlsxService()
+	
+	var dtos []service.Input
+	dtos = []service.Input{}
+	for _, v := range p {
+		dto := service.Input{
+			Text: v.GetPatientNameAndSessions(),
+			Time: v.GetTime(),
+		}
+		dtos = append(dtos, dto)
+	}
+	err = reportService.GenerateXlsxReport(dtos, t)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -8,7 +8,7 @@ import (
 
 func main() {
 	calendarService := service.NewCalendarService()
-	p, err := calendarService.DisplayCalendar()
+	p, _, err := calendarService.GetNextDayAppointments()
 	if err != nil {
 		log.Fatalf("Unable to display calendar: %v", err)
 	}

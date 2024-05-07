@@ -2,6 +2,8 @@ package service
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"time"
 
 	"github.com/xuri/excelize/v2"
@@ -10,7 +12,9 @@ import (
 const (
 	sheet_name = "Sheet1"
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	min_x_coordinate = 5 // E
+	min_x_coordinate = 5 // E = timesheet | patient | patient | patient | patient
+	column_width = 25
+	row_height = 25
 )
 
 type Input struct {
@@ -42,8 +46,11 @@ var STYLE_PROPERTIES = &excelize.Style{
 		},
 	},
 	Alignment: &excelize.Alignment{
-		Horizontal: "center",
+		Horizontal: "left",
 		Vertical:   "center",
+	},
+	Font: &excelize.Font{
+		Size: 10,
 	},
 }
 
@@ -59,7 +66,7 @@ func NewXlsxService() XlsxService {
 
 
 
-
+// Documentation: https://xuri.me/excelize/en
 func (s *xlsxService) GenerateXlsxReport(input []Input, date time.Time) error {
 	var (
 		y_axis int = 1
@@ -71,7 +78,7 @@ func (s *xlsxService) GenerateXlsxReport(input []Input, date time.Time) error {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
-			fmt.Println(err)
+			log.Fatalln(err.Error())
 		}
 	}()
 
@@ -84,7 +91,7 @@ func (s *xlsxService) GenerateXlsxReport(input []Input, date time.Time) error {
 		return err
 	}
 
-	err = f.MergeCell("Sheet1", "A1", minCellName)
+	err = f.MergeCell(sheet_name, "A1", minCellName)
 
 	if err != nil {
 		return err
@@ -144,19 +151,21 @@ func (s *xlsxService) GenerateXlsxReport(input []Input, date time.Time) error {
 		for rowIndex, rowCell := range col {
 			// columnIndex == 0 is A column
 			// CellIndex == 0 is the first row (header)
-			// I want to start writing only when the condition below is true. It's Column A and not the Header
-			if columnIndex == 0 && rowIndex > 0 {
-				for _, t := range input {
-					if t.Time != rowCell {
-						continue
-					}
-					patientsToWrite = append(patientsToWrite, t.Text)
-					if len(patientsToWrite) == 0 {
-						break
-					}
-				}
-
+			// I want to start writing only when the condition below is false - It must be Column A and not the Header
+			if columnIndex != 0 && rowIndex == 0 {
+				continue
 			}
+
+			for _, t := range input {
+				if t.Time != rowCell {
+					continue
+				}
+				patientsToWrite = append(patientsToWrite, t.Text)
+				if len(patientsToWrite) == 0 {
+					break
+				}
+			}
+
 			for i, p := range patientsToWrite {
 				// write input to the cell
 				columnCoordinates := columnIndex + 2 + i
@@ -168,6 +177,7 @@ func (s *xlsxService) GenerateXlsxReport(input []Input, date time.Time) error {
 				f.SetCellValue(sheet_name, cellName, p)
 			}
 			patientsToWrite = []string{}
+			
 
 		}
 	}
@@ -183,7 +193,7 @@ func (s *xlsxService) GenerateXlsxReport(input []Input, date time.Time) error {
 	
 	// Save workbook
 	if err := f.SaveAs(fileName); err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	return nil
@@ -205,20 +215,40 @@ func (s *xlsxService) applyStyle(f *excelize.File) error {
 		return err
 	}
 
-	x_axis := min_x_coordinate
+	x_axis := len(cols)
 	y_axis := len(rows)
-
+	x_cell_name, err := excelize.CoordinatesToCellName(x_axis, 1)
+	if err != nil {
+		return err
+	}
 	// Merging first cell to last cell
 	// If x_axis is bigger than min_x_coordinate - it means that I need to increase the size of the merge cell
 	if x_axis > min_x_coordinate {
-		x_axis = len(cols)
-		x_merge_coordinate, err := excelize.CoordinatesToCellName(x_axis, 1)
+
+		err = f.MergeCell(sheet_name, "A1", x_cell_name)
+	
 		if err != nil {
 			return err
 		}
-	
-		err = f.MergeCell("Sheet1", "A1", x_merge_coordinate)
-	
+	} else {
+		x_axis = min_x_coordinate
+		x_cell_name, err = excelize.CoordinatesToCellName(x_axis, 1)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Column width
+	regex := regexp.MustCompile(`\d+`)
+	x_alpha := regex.ReplaceAllString(x_cell_name, "")
+	err = f.SetColWidth(sheet_name, "B", x_alpha, column_width)
+	if err != nil {
+		return err
+	}
+
+	// column height
+	for i := 1; i <= y_axis; i++ {
+		err = f.SetRowHeight(sheet_name, i, row_height)
 		if err != nil {
 			return err
 		}
@@ -236,8 +266,35 @@ func (s *xlsxService) applyStyle(f *excelize.File) error {
 		return err
 	}
 
-	err = f.SetCellStyle("Sheet1", "A1", lastCellName, style)
+	err = f.SetCellStyle(sheet_name, "A1", lastCellName, style)
 
+	if err != nil {
+		return err
+	}
+
+	// next styles are all bold
+	STYLE_PROPERTIES.Font.Bold = true
+	// Centering header
+	STYLE_PROPERTIES.Alignment.Horizontal = "center"
+	style, err = f.NewStyle(STYLE_PROPERTIES)
+	if err != nil {
+		return err
+	}
+	
+	err = f.SetCellStyle(sheet_name, "A1", x_cell_name, style)
+	if err != nil {
+		return err
+	}
+	
+	// making timesheet bold
+	STYLE_PROPERTIES.Alignment.Horizontal = "left"
+	style, err = f.NewStyle(STYLE_PROPERTIES)
+	if err != nil {
+		return err
+	}
+	
+	y_cell := fmt.Sprintf("A%d", y_axis)
+	err = f.SetCellStyle(sheet_name, "A2", y_cell, style)
 	if err != nil {
 		return err
 	}

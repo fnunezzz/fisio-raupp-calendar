@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/fnunezzz/fisio-raupp-calendar/internal/service"
 )
@@ -13,7 +12,7 @@ func main() {
 	xlsxService := service.NewXlsxService()
 
 	calendarService := service.NewCalendarService()
-	p, err := calendarService.DisplayCalendar()
+	p, t, err := calendarService.GetNextDayAppointments()
 	if err != nil {
 		log.Fatalf("Unable to display calendar: %v", err)
 	}
@@ -30,7 +29,6 @@ func main() {
 	}
 
 	
-	currentTime := time.Now()
-	xlsxService.GenerateXlsxReport(dtos, currentTime)
+	xlsxService.GenerateXlsxReport(dtos, t)
 	
 }
